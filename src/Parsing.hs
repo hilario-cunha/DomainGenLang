@@ -43,7 +43,7 @@ parsePropertyName = do
 parsePropertyType :: Parser String
 parsePropertyType = do
                     first <- letter
-                    rest <- many (letter <|> digit <|> symbol)
+                    rest <- many (letter <|> digit <|> symbol <|> char '[' <|> char ']' <|> char '.')
                     return (first:rest)
 
 parseInt :: Parser Integer

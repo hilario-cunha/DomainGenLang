@@ -4,6 +4,7 @@ module CSharpGen
 
 import Parsing
 import Language.CSharp.Syntax
+import Data.Char (toLower, toUpper)
 
 transform :: DslVal -> Either String CompilationUnit
 transform (Namespace ns cs) = Right $ CompilationUnit [] [mkNamespace ns (map transformClass cs)]
@@ -46,10 +47,14 @@ mkCtor m c ps =
         Nothing 
         (mkPrivateCtorBody ps)
     where 
-        mkFormalParamP (Property n t _) = mkFormalParam t n
+        mkFormalParamP (Property n t _) = mkFormalParam t (camelCase n)
         mkCreateMethodParams ps = map mkFormalParamP ps
         mkPrivateCtorBody ps = ConstructorStatementBody (map mkPrivateCtorBodyP ps)
-        mkPrivateCtorBodyP (Property n _ _) = ExpressionStatement $ mkAssignThisDot n n
+        mkPrivateCtorBodyP (Property n _ _) = ExpressionStatement $ mkAssignThisDot n (camelCase n)
+
+camelCase :: String -> String
+camelCase (head:tail) = toLower head : tail
+camelCase [] = []
 
         
 mkPropertyAutoPublicGet :: String -> String -> MemberDeclaration
@@ -82,9 +87,9 @@ mkPublicStaticCreateMethod c ps =
         callCtor = mkNew c (map mkSimpleNameArgumentP ps)
         mkAllValidations = concat $ map mkValidations ps
 
-        mkFormalParamP (Property n t _) = mkFormalParam t n
-        mkSimpleNameArgumentP (Property n _ _) = mkSimpleNameArgument n
-        mkValidations (Property n t vals) = map (mkValidation n) vals
+        mkFormalParamP (Property n t _) = mkFormalParam t (camelCase n)
+        mkSimpleNameArgumentP (Property n _ _) = mkSimpleNameArgument (camelCase n)
+        mkValidations (Property n t vals) = map (mkValidation (camelCase n)) vals
 
         ifNullThen n = ifThenBinaryOp BinaryEquals (mkSimpleName n) (Literal NullLit)
 
