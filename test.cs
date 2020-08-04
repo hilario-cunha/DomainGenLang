@@ -1,3 +1,5 @@
+using Tlantic.Functional;
+using System.Collections.Generic;
 namespace MRS.InStore.SDK
 {
     public partial class Zone
@@ -55,5 +57,15 @@ namespace MRS.InStore.SDK
         public bool Active {get; private set;}
         public bool Display {get; private set;}
         public Maybe<List<string>> Options {get; private set;}
+    }
+    public partial class Range
+    {
+        public Range(int begin,int end)
+        {
+            this.Begin = begin;
+            this.End = end;
+        }
+        public int Begin {get; private set;}
+        public int End {get; private set;}
     }
 }

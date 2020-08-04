@@ -28,7 +28,7 @@ data Property = Property String String [PropertyValidation]
 data Class = Class String [Property]
             deriving Show
 
-data DslVal = Namespace String [Class]
+data DslVal = Namespace [String] String [Class]
             deriving Show
 
 symbol :: Parser Char
@@ -135,13 +135,28 @@ parseNamespace = do
                     rest <- many (letter <|> digit <|> symbol <|> char '.')
                     return (first:rest)
 
+parseBeginUsings :: Parser ()
+parseBeginUsings = do
+                    many space
+                    char 'u'
+                    atLeastOneSpace
+
+parseUsing :: Parser String
+parseUsing = do
+                spaces
+                first <- letter
+                rest <- many (letter <|> digit <|> symbol <|> char '.')
+                spaces
+                return (first:rest)
+
 parseDslVal :: Parser DslVal
 parseDslVal = do
+                usings <- (parseBeginUsings >> between (char '[') (char ']') (sepBy1 parseUsing (char ','))) <|> return []
                 parseBeginNamespace
                 namespace <- parseNamespace
                 spaces
                 parseBeginClass
                 cs <- manyTill parseClass eof
                 spaces
-                return $ Namespace namespace cs
+                return $ Namespace usings namespace cs
 

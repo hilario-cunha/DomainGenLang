@@ -7,7 +7,13 @@ import Language.CSharp.Syntax
 import Data.Char (toLower, toUpper)
 
 transform :: DslVal -> Either String CompilationUnit
-transform (Namespace ns cs) = Right $ CompilationUnit [] [mkNamespace ns (map transformClass cs)]
+transform (Namespace usings ns cs) = Right $ CompilationUnit (mkUsings usings) [mkNamespace ns (map transformClass cs)]
+
+mkUsings :: [String] -> [Using]
+mkUsings = map mkUsing
+
+mkUsing :: String -> Using
+mkUsing u = Using (mkName u) False
 
 mkNamespace :: String -> [Declaration] -> Declaration
 mkNamespace ns = NamespaceDeclaration [] (mkName ns)

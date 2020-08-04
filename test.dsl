@@ -1,3 +1,4 @@
+u [Tlantic.Functional , System.Collections.Generic]
 n MRS.InStore.SDK
 
 c Zone
@@ -22,3 +23,8 @@ c TaskLocation
 p Active bool
 p Display bool
 p Options Maybe<List<string>> 
+
+c Range
+p Begin int
+p End int
+
