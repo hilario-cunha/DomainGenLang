@@ -1,20 +1,23 @@
-public partial class LabeLConfig
+namespace MRS.InStore.SDK
 {
-    public static Choice<LabeLConfig, LabeLConfigError> Create(bool IsLabelChooseByServer,string DefaultLabelCode,bool CheckSettingOnPrint)
+    public partial class Zone
     {
-        if (DefaultLabelCode == null)
-            throw new System.ArgumentNullException("DefaultLabelCode");
-        if (DefaultLabelCode.Length > 10)
-            return Choice<LabeLConfig, LabeLConfigError>.Choice2Of2(LabeLConfigError.MaxLengthDefaultLabelCodeError);
-        return Choice<LabeLConfig, LabeLConfigError>.Choice1Of2(new LabeLConfig(IsLabelChooseByServer,DefaultLabelCode,CheckSettingOnPrint));
+        public Zone(string ZoneCode,string Value)
+        {
+            this.ZoneCode = ZoneCode;
+            this.Value = Value;
+        }
+        public string ZoneCode {get; private set;}
+        public string Value {get; private set;}
     }
-    private LabeLConfig(bool IsLabelChooseByServer,string DefaultLabelCode,bool CheckSettingOnPrint)
+    public partial class WithdrawModalControl
     {
-        this.IsLabelChooseByServer = IsLabelChooseByServer;
-        this.DefaultLabelCode = DefaultLabelCode;
-        this.CheckSettingOnPrint = CheckSettingOnPrint;
+        public WithdrawModalControl(string Code,bool Visible)
+        {
+            this.Code = Code;
+            this.Visible = Visible;
+        }
+        public string Code {get; private set;}
+        public bool Visible {get; private set;}
     }
-    public bool IsLabelChooseByServer {get; private set;}
-    public string DefaultLabelCode {get; private set;}
-    public bool CheckSettingOnPrint {get; private set;}
 }

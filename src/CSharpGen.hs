@@ -6,10 +6,58 @@ import Parsing
 import Language.CSharp.Syntax
 
 transform :: DslVal -> Either String CompilationUnit
-transform (Class c ps) = Right $ CompilationUnit [] [transformClass c ps]
+transform (Namespace ns cs) = Right $ CompilationUnit [] [mkNamespace ns (map transformClass cs)]
 
-transformClass :: String -> [Property] -> Declaration
-transformClass c ps = mkPublicClass c ((mkPublicStaticCreateMethod c ps):(mkPrivateCtor c ps):(map mkAutoProperty ps))
+mkNamespace :: String -> [Declaration] -> Declaration
+mkNamespace ns = NamespaceDeclaration [] (mkName ns)
+
+transformClass :: Class -> Declaration
+transformClass (Class c ps) = transformClassC c ps
+
+transformClassC :: String -> [Property] -> Declaration
+transformClassC c ps = mkPublicClass c (if hasValidationsPs then (generateStaticCreateMethod:ctorAndProperties) else ctorAndProperties)
+    where 
+        hasValidationsP (Property _ _ vals) = not (null vals)
+        hasValidationsPs = or $ map hasValidationsP ps
+
+        generateStaticCreateMethod = mkPublicStaticCreateMethod c ps
+
+        ctorAndProperties = generateCtor : generateProperties
+        generateCtor = mkCtor [if(hasValidationsPs) then Private else Public] c ps
+        generateProperties = createProperties ps
+
+        
+createProperties :: [Property] -> [MemberDeclaration]
+createProperties ps = map mkAutoProperty ps
+    where 
+        mkAutoProperty (Property n t _) = mkPropertyAutoPublicGet t n
+
+
+mkPrivateCtor :: String -> [Property] -> MemberDeclaration
+mkPrivateCtor c ps = mkCtor [Private] c ps
+
+mkCtor :: [Modifier] -> String -> [Property] -> MemberDeclaration
+mkCtor m c ps = 
+    ConstructorMemberDeclaration 
+        [] 
+        m 
+        (Identifier c) 
+        (FormalParams (mkCreateMethodParams ps) (Nothing)) 
+        Nothing 
+        (mkPrivateCtorBody ps)
+    where 
+        mkFormalParamP (Property n t _) = mkFormalParam t n
+        mkCreateMethodParams ps = map mkFormalParamP ps
+        mkPrivateCtorBody ps = ConstructorStatementBody (map mkPrivateCtorBodyP ps)
+        mkPrivateCtorBodyP (Property n _ _) = ExpressionStatement $ mkAssignThisDot n n
+
+        
+mkPropertyAutoPublicGet :: String -> String -> MemberDeclaration
+mkPropertyAutoPublicGet t n = PropertyMemberDeclaration [] [Public] (mkTypeNamed t) (mkName n) mkAutoPropertyBody
+    where
+        mkAutoPropertyBody = PropertyBody mkGetAccessorDeclarationAuto mkSetAccessorDeclarationAutoPrivate Nothing
+        mkGetAccessorDeclarationAuto = Just $ GetAccessorDeclaration [] [] Nothing
+        mkSetAccessorDeclarationAutoPrivate = Just $ SetAccessorDeclaration [] [Private] Nothing
 
 mkPublicStaticCreateMethod :: [Char] -> [Property] -> MemberDeclaration
 mkPublicStaticCreateMethod c ps = 
@@ -49,31 +97,11 @@ mkPublicStaticCreateMethod c ps =
         mkValidation n (MaxLength l) = ifLengthGreaterThanThen n l (returnError $ "MaxLength" ++ n ++ "Error")
         mkValidation n (MinLength l) = ifLengthLessThanThen n l (returnError $ "MinLength" ++ n ++ "Error")
 
-mkPrivateCtor :: String -> [Property] -> MemberDeclaration
-mkPrivateCtor c ps = 
-    ConstructorMemberDeclaration 
-        [] 
-        [Private] 
-        (Identifier c) 
-        (FormalParams (mkCreateMethodParams ps) (Nothing)) 
-        Nothing 
-        (mkPrivateCtorBody ps)
-    where 
-        mkFormalParamP (Property n t _) = mkFormalParam t n
-        mkCreateMethodParams ps = map mkFormalParamP ps
-        mkPrivateCtorBody ps = ConstructorStatementBody (map mkPrivateCtorBodyP ps)
-        mkPrivateCtorBodyP (Property n _ _) = mkAssignStatement ("this."++n) n
-
-mkAutoProperty :: Property -> MemberDeclaration
-mkAutoProperty (Property n t _) = PropertyMemberDeclaration [] [Public] (mkTypeNamed t) (mkName n) mkAutoPropertyBody
-    where
-        mkAutoPropertyBody = 
-            PropertyBody 
-                (Just $ GetAccessorDeclaration [] [] Nothing) 
-                (Just $ SetAccessorDeclaration [] [Private] Nothing) 
-                (Nothing)
 
 
+
+mkAssignThisDot :: String -> String -> Expression
+mkAssignThisDot l r = mkAssign (MemberAccess $ mkPrimaryMemberAccessThisDot l) (mkSimpleName r)
 
 mkArgument :: Expression -> Argument
 mkArgument = Argument Nothing
@@ -96,8 +124,15 @@ mkTypeNamed t = (TypeNamed (TypeName (mkName t) []))
 mkName :: String -> Name
 mkName n = (Name [Identifier n])
 
-mkAssign :: String -> String -> Expression
-mkAssign l r = Assign (mkSimpleName l) OpAssign (mkSimpleName r)
+-- (Assign (MemberAccess (PrimaryMemberAccess This (Identifier "IsLabelChooseByServer") [])) OpAssign (SimpleName (Identifier "IsLabelChooseByServer") []))
+
+mkPrimaryMemberAccess :: Expression -> String -> MemberAccess
+mkPrimaryMemberAccess obj p = PrimaryMemberAccess obj (Identifier p) []
+mkPrimaryMemberAccessThisDot :: String -> MemberAccess
+mkPrimaryMemberAccessThisDot p = PrimaryMemberAccess This (Identifier p) []
+
+mkAssign :: Expression -> Expression -> Expression
+mkAssign l r = Assign l OpAssign r
 
 mkNew :: String -> [Argument] -> Expression
 mkNew cn args = ObjectCreationExpression (mkTypeNamed cn) args Nothing
@@ -116,7 +151,4 @@ ifThen ifOp thenOp = IfThenElse
 
 mkReturn :: Expression -> Statement
 mkReturn exp = Return $ Just exp
-
-mkAssignStatement :: String -> String -> Statement
-mkAssignStatement l r = ExpressionStatement $ mkAssign l r
 

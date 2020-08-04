@@ -1,15 +1,16 @@
 module Parsing
-    ( readOrThrow
-    , parseClass
-    , parseProperty
-    , parseValidations
+    ( parseReadOrThrow
     , DslVal(..)
+    , Class(..)
     , Property(..)
     , PropertyValidation(..)
     ) where
 
 import Text.ParserCombinators.Parsec
 import Data.Functor (void)
+
+parseReadOrThrow :: String -> Either String DslVal
+parseReadOrThrow = readOrThrow parseDslVal
 
 readOrThrow :: Parser a -> String -> Either String a
 readOrThrow parser input = case parse parser "lisp" input of
@@ -24,7 +25,10 @@ data PropertyValidation = NotNull
 data Property = Property String String [PropertyValidation]
             deriving Show
 
-data DslVal = Class String [Property]
+data Class = Class String [Property]
+            deriving Show
+
+data DslVal = Namespace String [Class]
             deriving Show
 
 symbol :: Parser Char
@@ -111,11 +115,33 @@ parseBeginClass = do
                     char 'c'
                     atLeastOneSpace
 
-parseClass :: Parser DslVal
+parseClass :: Parser Class
 parseClass = do
-                parseBeginClass
                 n <- parseClassName
                 atLeastOneSpace
-                ps <- manyTill parseProperty eof
+                ps <- manyTill parseProperty (void (char 'c') <|> eof)
                 spaces
                 return $ Class n ps
+
+parseBeginNamespace :: Parser ()
+parseBeginNamespace = do
+                    many space
+                    char 'n'
+                    atLeastOneSpace
+
+parseNamespace :: Parser String
+parseNamespace = do
+                    first <- letter
+                    rest <- many (letter <|> digit <|> symbol <|> char '.')
+                    return (first:rest)
+
+parseDslVal :: Parser DslVal
+parseDslVal = do
+                parseBeginNamespace
+                namespace <- parseNamespace
+                spaces
+                parseBeginClass
+                cs <- manyTill parseClass eof
+                spaces
+                return $ Namespace namespace cs
+

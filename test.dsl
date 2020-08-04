@@ -1,5 +1,10 @@
-c LabeLConfig
-p IsLabelChooseByServer bool
-p DefaultLabelCode string NotNull,MaxLength 10
-p CheckSettingOnPrint bool
+n MRS.InStore.SDK
+
+c Zone
+p ZoneCode string
+p Value string
+
+c WithdrawModalControl
+p Code string
+p Visible bool
 
