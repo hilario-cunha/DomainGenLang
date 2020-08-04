@@ -20,7 +20,7 @@ readOrThrow parser input = case parse parser "lisp" input of
 data PropertyValidation = NotNull
                         | MaxLength Integer
                         | MinLength Integer
-                        deriving Show            
+                        deriving (Show, Eq)
 
 data Property = Property String String [PropertyValidation]
             deriving Show

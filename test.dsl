@@ -1,4 +1,4 @@
-u [Tlantic.Functional , System.Collections.Generic]
+u [Tlantic.Functional , System.Collections.Generic, System.Drawing]
 n MRS.InStore.SDK
 
 c Zone
@@ -28,3 +28,6 @@ c Range
 p Begin int
 p End int
 
+c AlertColor
+p Range Range NotNull
+p Color Color NotNull

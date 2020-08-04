@@ -22,15 +22,18 @@ transformClass :: Class -> Declaration
 transformClass (Class c ps) = transformClassC c ps
 
 transformClassC :: String -> [Property] -> Declaration
-transformClassC c ps = mkPublicClass c (if hasValidationsPs then (generateStaticCreateMethod:ctorAndProperties) else ctorAndProperties)
+transformClassC c ps = mkPublicClass c (if hasOtherValidationsPs then (generateStaticCreateMethod:ctorAndProperties) else ctorAndProperties)
     where 
-        hasValidationsP (Property _ _ vals) = not (null vals)
-        hasValidationsPs = or $ map hasValidationsP ps
+        hasOtherValidationsP (Property _ _ vals) = not $ null $ filter (/=NotNull) vals
+        hasNotNullValidationsP (Property _ _ vals) = not $ null $ filter (==NotNull) vals
+        hasNotNullValidationsPs = or $ map hasNotNullValidationsP ps
+        hasOtherValidationsPs = or $ map hasOtherValidationsP ps
 
         generateStaticCreateMethod = mkPublicStaticCreateMethod c ps
 
         ctorAndProperties = generateCtor : generateProperties
-        generateCtor = mkCtor [if(hasValidationsPs) then Private else Public] c ps
+        applyNotNullInCtor = hasNotNullValidationsPs && (not hasOtherValidationsPs)
+        generateCtor = mkCtor [if(applyNotNullInCtor || not hasNotNullValidationsPs) then Public else Private] applyNotNullInCtor c ps
         generateProperties = createProperties ps
 
         
@@ -40,23 +43,27 @@ createProperties ps = map mkAutoProperty ps
         mkAutoProperty (Property n t _) = mkPropertyAutoPublicGet t n
 
 
-mkPrivateCtor :: String -> [Property] -> MemberDeclaration
-mkPrivateCtor c ps = mkCtor [Private] c ps
-
-mkCtor :: [Modifier] -> String -> [Property] -> MemberDeclaration
-mkCtor m c ps = 
+mkCtor :: [Modifier] -> Bool -> String -> [Property] -> MemberDeclaration
+mkCtor m applyNotNull c ps = 
     ConstructorMemberDeclaration 
         [] 
         m 
         (Identifier c) 
-        (FormalParams (mkCreateMethodParams ps) (Nothing)) 
+        (FormalParams (mkParams) (Nothing)) 
         Nothing 
-        (mkPrivateCtorBody ps)
+        (mkPrivateCtorBody)
     where 
+        mkParams = map mkFormalParamP ps
+        mkPrivateCtorBody = ConstructorStatementBody (concat (map mkPrivateCtorBodyP ps))
+
         mkFormalParamP (Property n t _) = mkFormalParam t (camelCase n)
-        mkCreateMethodParams ps = map mkFormalParamP ps
-        mkPrivateCtorBody ps = ConstructorStatementBody (map mkPrivateCtorBodyP ps)
-        mkPrivateCtorBodyP (Property n _ _) = ExpressionStatement $ mkAssignThisDot n (camelCase n)
+        mkPrivateCtorBodyP (Property n t vals) = if(applyNotNull && hasNotNullValidations vals) then [mkValidation, assignStatement] else [assignStatement]
+            where 
+                hasNotNullValidations vals = not $ null $ filter (==NotNull) vals
+                ifNullThen n = ifThenBinaryOp BinaryEquals (mkSimpleName $ camelCase n) (Literal NullLit)
+                mkValidation = ifNullThen n (Throw (Just $ mkNew "System.ArgumentNullException" [mkLiteralStringArgument $ camelCase n, mkLiteralStringArgument $ "Field "++ camelCase n ++" with type "++ t ++ " can not be null"])) 
+                assignStatement = ExpressionStatement $ mkAssignThisDot n (camelCase n)
+
 
 camelCase :: String -> String
 camelCase (head:tail) = toLower head : tail
@@ -95,7 +102,7 @@ mkPublicStaticCreateMethod c ps =
 
         mkFormalParamP (Property n t _) = mkFormalParam t (camelCase n)
         mkSimpleNameArgumentP (Property n _ _) = mkSimpleNameArgument (camelCase n)
-        mkValidations (Property n t vals) = map (mkValidation (camelCase n)) vals
+        mkValidations (Property n t vals) = map (mkValidation t (camelCase n)) vals
 
         ifNullThen n = ifThenBinaryOp BinaryEquals (mkSimpleName n) (Literal NullLit)
 
@@ -104,9 +111,10 @@ mkPublicStaticCreateMethod c ps =
         ifLengthLessThanThen = ifLengthBinaryOpThen  BinaryLessThan
 
         returnError e = (mkReturn (choice2Of2 [mkSimpleNameArgument $ cError ++ "." ++ e]))
-        mkValidation n (NotNull) = ifNullThen n (Throw (Just $ mkNew "System.ArgumentNullException" [mkLiteralStringArgument n])) 
-        mkValidation n (MaxLength l) = ifLengthGreaterThanThen n l (returnError $ "MaxLength" ++ n ++ "Error")
-        mkValidation n (MinLength l) = ifLengthLessThanThen n l (returnError $ "MinLength" ++ n ++ "Error")
+        
+        mkValidation t n (NotNull) = ifNullThen n (Throw (Just $ mkNew "System.ArgumentNullException" [mkLiteralStringArgument n, mkLiteralStringArgument $ "Field "++ camelCase n ++" with type "++ t ++ " can not be null"])) 
+        mkValidation _ n (MaxLength l) = ifLengthGreaterThanThen n l (returnError $ "MaxLength" ++ n ++ "Error")
+        mkValidation _ n (MinLength l) = ifLengthLessThanThen n l (returnError $ "MinLength" ++ n ++ "Error")
 
 
 

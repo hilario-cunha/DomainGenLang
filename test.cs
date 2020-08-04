@@ -1,5 +1,6 @@
 using Tlantic.Functional;
 using System.Collections.Generic;
+using System.Drawing;
 namespace MRS.InStore.SDK
 {
     public partial class Zone
@@ -67,5 +68,19 @@ namespace MRS.InStore.SDK
         }
         public int Begin {get; private set;}
         public int End {get; private set;}
+    }
+    public partial class AlertColor
+    {
+        public AlertColor(Range range,Color color)
+        {
+            if (range == null)
+                throw new System.ArgumentNullException("range","Field range with type Range can not be null");
+            this.Range = range;
+            if (color == null)
+                throw new System.ArgumentNullException("color","Field color with type Color can not be null");
+            this.Color = color;
+        }
+        public Range Range {get; private set;}
+        public Color Color {get; private set;}
     }
 }
