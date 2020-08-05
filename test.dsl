@@ -160,6 +160,6 @@ p DefaultLabelCode string
 p CheckSettingOnPrint bool
 
 c ChangePasswordRequest
-p OldPassword StringNotEmpty
-p NewPassword StringNotEmpty
-p NewPasswordConfirmation StringNotEmpty
+p OldPassword StringNotEmpty Required
+p NewPassword StringNotEmpty Required
+p NewPasswordConfirmation StringNotEmpty Required

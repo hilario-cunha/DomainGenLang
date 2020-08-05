@@ -20,6 +20,7 @@ readOrThrow parser input = case parse parser "lisp" input of
 data PropertyValidation = NotNull
                         | MaxLength Integer
                         | MinLength Integer
+                        | Required
                         deriving (Show, Eq)
 
 data Property = Property String String [PropertyValidation]
@@ -77,6 +78,7 @@ parseValidation = do
                         "NotNull" -> return NotNull
                         "MaxLength" -> parseMaxLength
                         "MinLength" -> parseMinLength
+                        "Required" -> return Required
                         _ -> unexpected ("Unknow validation(" ++ validationName ++ ")")
 
 

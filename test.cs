@@ -383,6 +383,16 @@ namespace MRS.InStore.SDK
     }
     public partial class ChangePasswordRequest
     {
+        public static Choice<ChangePasswordRequest, ChangePasswordRequestError> Create(StringNotEmpty oldPassword,StringNotEmpty newPassword,StringNotEmpty newPasswordConfirmation)
+        {
+            if (oldPassword == null)
+                return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice2Of2(ChangePasswordRequestError.OldPasswordFieldIsRequired);
+            if (newPassword == null)
+                return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice2Of2(ChangePasswordRequestError.NewPasswordFieldIsRequired);
+            if (newPasswordConfirmation == null)
+                return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice2Of2(ChangePasswordRequestError.NewPasswordConfirmationFieldIsRequired);
+            return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice1Of2(new ChangePasswordRequest(oldPassword,newPassword,newPasswordConfirmation));
+        }
         public ChangePasswordRequest(StringNotEmpty oldPassword,StringNotEmpty newPassword,StringNotEmpty newPasswordConfirmation)
         {
             this.OldPassword = oldPassword;
