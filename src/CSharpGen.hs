@@ -114,12 +114,16 @@ mkPublicStaticCreateMethod c ps =
         ifLengthGreaterThanThen = ifLengthBinaryOpThen BinaryGreaterThan
         ifLengthLessThanThen = ifLengthBinaryOpThen  BinaryLessThan
 
+        ifEqualsThen n1 n2 = ifThen (Invocation (MemberAccess (PrimaryMemberAccess (mkSimpleName n1) (Identifier "Equals") [])) [Argument Nothing (mkSimpleName n2)])
+
+
         returnError e = (mkReturn (choice2Of2 [mkSimpleNameArgument $ cError ++ "." ++ e]))
         
         mkValidation t n (NotNull) = ifNullThen n (Throw (Just $ mkNew "System.ArgumentNullException" [mkLiteralStringArgument n, mkLiteralStringArgument $ "Field "++ camelCase n ++" with type "++ t ++ " can not be null"])) 
         mkValidation _ n (MaxLength l) = ifLengthGreaterThanThen n l (returnError $ "MaxLength" ++ n ++ "Error")
         mkValidation _ n (MinLength l) = ifLengthLessThanThen n l (returnError $ "MinLength" ++ n ++ "Error")
         mkValidation _ n (Required) = ifNullThen n (returnError $ (capitalize n) ++ "FieldIsRequired")
+        mkValidation _ n (Equals n2) = ifEqualsThen (camelCase n2) n (returnError $ n2 ++ "And"++ (capitalize n) ++ "Equals")
         
 
 

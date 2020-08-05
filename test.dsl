@@ -161,5 +161,5 @@ p CheckSettingOnPrint bool
 
 c ChangePasswordRequest
 p OldPassword StringNotEmpty Required
-p NewPassword StringNotEmpty Required
+p NewPassword StringNotEmpty Required,Equals OldPassword
 p NewPasswordConfirmation StringNotEmpty Required
