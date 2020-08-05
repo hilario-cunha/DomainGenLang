@@ -143,8 +143,6 @@ mkTypeNamed t = (TypeNamed (TypeName (mkName t) []))
 mkName :: String -> Name
 mkName n = (Name [Identifier n])
 
--- (Assign (MemberAccess (PrimaryMemberAccess This (Identifier "IsLabelChooseByServer") [])) OpAssign (SimpleName (Identifier "IsLabelChooseByServer") []))
-
 mkPrimaryMemberAccess :: Expression -> String -> MemberAccess
 mkPrimaryMemberAccess obj p = PrimaryMemberAccess obj (Identifier p) []
 mkPrimaryMemberAccessThisDot :: String -> MemberAccess
