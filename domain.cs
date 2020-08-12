@@ -393,9 +393,11 @@ namespace MRS.InStore.SDK
                 return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice2Of2(ChangePasswordRequestError.OldPasswordAndNewPasswordEquals);
             if (newPasswordConfirmation == null)
                 return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice2Of2(ChangePasswordRequestError.NewPasswordConfirmationFieldIsRequired);
+            if (!newPassword.Equals(newPasswordConfirmation))
+                return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice2Of2(ChangePasswordRequestError.NewPasswordAndNewPasswordConfirmationNotEquals);
             return Choice<ChangePasswordRequest, ChangePasswordRequestError>.Choice1Of2(new ChangePasswordRequest(oldPassword,newPassword,newPasswordConfirmation));
         }
-        public ChangePasswordRequest(StringNotEmpty oldPassword,StringNotEmpty newPassword,StringNotEmpty newPasswordConfirmation)
+        private ChangePasswordRequest(StringNotEmpty oldPassword,StringNotEmpty newPassword,StringNotEmpty newPasswordConfirmation)
         {
             this.OldPassword = oldPassword;
             this.NewPassword = newPassword;

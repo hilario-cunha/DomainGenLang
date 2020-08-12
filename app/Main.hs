@@ -13,12 +13,12 @@ main =
 
 generate :: IO ()
 generate =  do
-    toParse <- readFile "test.dsl"
+    toParse <- readFile "domain.dsl"
     case parseReadOrThrow toParse of
         Left err -> print err
         Right ast -> case transform ast of
                         Left err -> print err
-                        Right code -> writeFile "test.cs" $ prettyPrint code
+                        Right code -> writeFile "domain.cs" $ prettyPrint code
     print "end"
 
 

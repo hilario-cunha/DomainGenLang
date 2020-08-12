@@ -22,6 +22,7 @@ data PropertyValidation = NotNull
                         | MinLength Integer
                         | Required
                         | Equals String
+                        | NotEquals String
                         deriving (Show, Eq)
 
 data Property = Property String String [PropertyValidation]
@@ -77,6 +78,12 @@ parseEquals = do
                     n <- parsePropertyName 
                     return $ Equals n
 
+parseNotEquals :: Parser PropertyValidation
+parseNotEquals = do 
+                    spaces
+                    n <- parsePropertyName 
+                    return $ NotEquals n
+
 parseValidation :: Parser PropertyValidation
 parseValidation = do
                     validationName <- parseValidationName
@@ -87,6 +94,7 @@ parseValidation = do
                         "MinLength" -> parseMinLength
                         "Required" -> return Required
                         "Equals" ->  parseEquals
+                        "NotEquals" -> parseNotEquals
                         _ -> unexpected ("Unknow validation(" ++ validationName ++ ")")
 
 

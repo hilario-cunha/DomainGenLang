@@ -33,7 +33,7 @@ transformClassC c ps = mkPublicClass c (if hasOtherValidationsPs then (generateS
 
         ctorAndProperties = generateCtor : generateProperties
         applyNotNullInCtor = hasNotNullValidationsPs && (not hasOtherValidationsPs)
-        generateCtor = mkCtor [if(applyNotNullInCtor || not hasNotNullValidationsPs) then Public else Private] applyNotNullInCtor c ps
+        generateCtor = mkCtor [if(applyNotNullInCtor || not hasOtherValidationsPs) then Public else Private] applyNotNullInCtor c ps
         generateProperties = createProperties ps
 
         
@@ -115,7 +115,7 @@ mkPublicStaticCreateMethod c ps =
         ifLengthLessThanThen = ifLengthBinaryOpThen  BinaryLessThan
 
         ifEqualsThen n1 n2 = ifThen (Invocation (MemberAccess (PrimaryMemberAccess (mkSimpleName n1) (Identifier "Equals") [])) [Argument Nothing (mkSimpleName n2)])
-
+        ifNotEqualsThen n1 n2 = ifThen (UnaryNot (Invocation (MemberAccess (PrimaryMemberAccess (mkSimpleName n1) (Identifier "Equals") [])) [Argument Nothing (mkSimpleName n2)]))
 
         returnError e = (mkReturn (choice2Of2 [mkSimpleNameArgument $ cError ++ "." ++ e]))
         
@@ -123,8 +123,8 @@ mkPublicStaticCreateMethod c ps =
         mkValidation _ n (MaxLength l) = ifLengthGreaterThanThen n l (returnError $ "MaxLength" ++ n ++ "Error")
         mkValidation _ n (MinLength l) = ifLengthLessThanThen n l (returnError $ "MinLength" ++ n ++ "Error")
         mkValidation _ n (Required) = ifNullThen n (returnError $ (capitalize n) ++ "FieldIsRequired")
-        mkValidation _ n (Equals n2) = ifEqualsThen (camelCase n2) n (returnError $ n2 ++ "And"++ (capitalize n) ++ "Equals")
-        
+        mkValidation _ n (Equals n2) = ifNotEqualsThen (camelCase n2) n (returnError $ n2 ++ "And"++ (capitalize n) ++ "NotEquals")
+        mkValidation _ n (NotEquals n2) = ifEqualsThen (camelCase n2) n (returnError $ n2 ++ "And"++ (capitalize n) ++ "Equals")
 
 
 
