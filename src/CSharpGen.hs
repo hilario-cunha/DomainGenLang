@@ -73,14 +73,6 @@ capitalize :: String -> String
 capitalize (head:tail) = toUpper head : tail
 capitalize [] = []
 
-        
-mkPropertyAutoPublicGet :: String -> String -> MemberDeclaration
-mkPropertyAutoPublicGet t n = PropertyMemberDeclaration [] [Public] (mkTypeNamed t) (mkName n) mkAutoPropertyBody
-    where
-        mkAutoPropertyBody = PropertyBody mkGetAccessorDeclarationAuto mkSetAccessorDeclarationAutoPrivate Nothing
-        mkGetAccessorDeclarationAuto = Just $ GetAccessorDeclaration [] [] Nothing
-        mkSetAccessorDeclarationAutoPrivate = Just $ SetAccessorDeclaration [] [Private] Nothing
-
 mkPublicStaticCreateMethod :: [Char] -> [Property] -> MemberDeclaration
 mkPublicStaticCreateMethod c ps = 
     MethodMemberDeclaration 
@@ -178,4 +170,22 @@ ifThen ifOp thenOp = IfThenElse
 
 mkReturn :: Expression -> Statement
 mkReturn exp = Return $ Just exp
+
+mkAutoGetAccessorDeclaration :: [Modifier] -> Maybe AccessorDeclaration
+mkAutoGetAccessorDeclaration modifiers = Just $ GetAccessorDeclaration [] modifiers Nothing
+
+mkAutoSetAccessorDeclaration :: [Modifier] -> Maybe AccessorDeclaration
+mkAutoSetAccessorDeclaration modifiers = Just $ SetAccessorDeclaration [] modifiers Nothing
+
+mkPropertyBody :: Maybe AccessorDeclaration -> Maybe AccessorDeclaration -> PropertyBody
+mkPropertyBody getAccessorDeclaration setAccessorDeclaration = PropertyBody getAccessorDeclaration setAccessorDeclaration Nothing
+
+mkPropertyMemberDeclaration :: [Modifier] -> Type -> Name -> PropertyBody -> MemberDeclaration
+mkPropertyMemberDeclaration modifiers _type name body = PropertyMemberDeclaration [] modifiers _type name body
+
+mkAutoPropertyBodyPrivateSet :: PropertyBody
+mkAutoPropertyBodyPrivateSet = mkPropertyBody (mkAutoGetAccessorDeclaration []) (mkAutoSetAccessorDeclaration [Private])
+
+mkPropertyAutoPublicGet :: String -> String -> MemberDeclaration
+mkPropertyAutoPublicGet t n = mkPropertyMemberDeclaration [Public] (mkTypeNamed t) (mkName n) (mkAutoPropertyBodyPrivateSet)
 
