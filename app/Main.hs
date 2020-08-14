@@ -1,7 +1,7 @@
 module Main where
 
 import Parsing
-import CSharpGen
+import DomainClassesCSharpGen
 import Language.CSharp.Pretty (prettyPrint)
 import Language.CSharp.Lexer
 import Language.CSharp.Parser (parser)

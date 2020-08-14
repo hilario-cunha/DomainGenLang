@@ -75,9 +75,9 @@ namespace MRS.InStore.SDK
         {
             if (range == null)
                 throw new System.ArgumentNullException("range","Field range with type Range can not be null");
-            this.Range = range;
             if (color == null)
                 throw new System.ArgumentNullException("color","Field color with type Color can not be null");
+            this.Range = range;
             this.Color = color;
         }
         public Range Range {get; private set;}
@@ -145,10 +145,10 @@ namespace MRS.InStore.SDK
     {
         public AdhocTasks(AdHocTasksDefaultNameV2 adHocTasksDefaultNameV2,AdhocTasksLevel adhocTasksLevel,CreateTaskOptions adhocTasksTypes)
         {
-            this.AdHocTasksDefaultNameV2 = adHocTasksDefaultNameV2;
-            this.AdhocTasksLevel = adhocTasksLevel;
             if (adhocTasksTypes == null)
                 throw new System.ArgumentNullException("adhocTasksTypes","Field adhocTasksTypes with type CreateTaskOptions can not be null");
+            this.AdHocTasksDefaultNameV2 = adHocTasksDefaultNameV2;
+            this.AdhocTasksLevel = adhocTasksLevel;
             this.AdhocTasksTypes = adhocTasksTypes;
         }
         public AdHocTasksDefaultNameV2 AdHocTasksDefaultNameV2 {get; private set;}
@@ -255,6 +255,12 @@ namespace MRS.InStore.SDK
         {
             if (adhocTasks == null)
                 throw new System.ArgumentNullException("adhocTasks","Field adhocTasks with type AdhocTasks can not be null");
+            if (notProcessedResourcesModal == null)
+                throw new System.ArgumentNullException("notProcessedResourcesModal","Field notProcessedResourcesModal with type NotProcessedResourcesModal can not be null");
+            if (taskLocation == null)
+                throw new System.ArgumentNullException("taskLocation","Field taskLocation with type TaskLocation can not be null");
+            if (sortResources == null)
+                throw new System.ArgumentNullException("sortResources","Field sortResources with type SortResources can not be null");
             this.AdhocTasks = adhocTasks;
             this.AlertColors = alertColors;
             this.AllowContainers = allowContainers;
@@ -268,8 +274,6 @@ namespace MRS.InStore.SDK
             this.HandleQuantities = handleQuantities;
             this.ManageContainers = manageContainers;
             this.MaxEanLength = maxEanLength;
-            if (notProcessedResourcesModal == null)
-                throw new System.ArgumentNullException("notProcessedResourcesModal","Field notProcessedResourcesModal with type NotProcessedResourcesModal can not be null");
             this.NotProcessedResourcesModal = notProcessedResourcesModal;
             this.OnAddResourceError = onAddResourceError;
             this.OnGetItemAdhocInfo = onGetItemAdhocInfo;
@@ -300,8 +304,6 @@ namespace MRS.InStore.SDK
             this.AllowExpectedQuantityDefault = allowExpectedQuantityDefault;
             this.HandleMode = handleMode;
             this.ShowFutureDatesOnApproval = showFutureDatesOnApproval;
-            if (taskLocation == null)
-                throw new System.ArgumentNullException("taskLocation","Field taskLocation with type TaskLocation can not be null");
             this.TaskLocation = taskLocation;
             this.WithdrawModalControl = withdrawModalControl;
             this.AllowDepreciateOverSoh = allowDepreciateOverSoh;
@@ -311,8 +313,6 @@ namespace MRS.InStore.SDK
             this.PreviousApproveAction = previousApproveAction;
             this.DestinationSearchInput = destinationSearchInput;
             this.ListMode = listMode;
-            if (sortResources == null)
-                throw new System.ArgumentNullException("sortResources","Field sortResources with type SortResources can not be null");
             this.SortResources = sortResources;
         }
         public AdhocTasks AdhocTasks {get; private set;}
