@@ -87,3 +87,51 @@ mkAutoPropertyBodyPrivateSet = mkPropertyBody (mkAutoGetAccessorDeclaration []) 
 
 mkPropertyAutoPublicGet :: String -> String -> MemberDeclaration
 mkPropertyAutoPublicGet t n = mkPropertyMemberDeclaration [Public] (mkTypeNamed t) (mkName n) (mkAutoPropertyBodyPrivateSet)
+
+mkFormalParams :: [FormalParam] -> FormalParams
+mkFormalParams params = FormalParams params (Nothing)
+
+mkConstructorMemberDeclaration :: [Modifier] -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
+mkConstructorMemberDeclaration modifiers name formalParams body = ConstructorMemberDeclaration [] modifiers (Identifier name) (mkFormalParams formalParams) Nothing (ConstructorStatementBody body)
+
+mkMethodMemberDeclaration :: [Modifier] -> String -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
+mkMethodMemberDeclaration modifiers _type name formalParams bodyStatements = mkMethodMemberDeclarationWithTypeParameters modifiers (Just $ mkTypeNamed _type) name [] formalParams [] bodyStatements
+
+mkMethodMemberDeclarationWithVoidReturn :: [Modifier] -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
+mkMethodMemberDeclarationWithVoidReturn modifiers name formalParams bodyStatements = mkMethodMemberDeclarationWithTypeParameters modifiers Nothing name [] formalParams [] bodyStatements
+
+mkMethodMemberDeclarationWithTypeParameters :: [Modifier] -> Maybe Type -> String -> [TypeParameter] -> [FormalParam] -> [TypeParameterConstraintClause] -> [Statement] -> MemberDeclaration
+mkMethodMemberDeclarationWithTypeParameters modifiers mType name typeParameters formalParams typeParameterConstraintClauses bodyStatements = MethodMemberDeclaration [] modifiers mType (mkName name) typeParameters (mkFormalParams formalParams) typeParameterConstraintClauses (MethodStatementBody bodyStatements)
+
+mkMethodMemberDeclarationPublicStatic :: String -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
+mkMethodMemberDeclarationPublicStatic = mkMethodMemberDeclaration [Public, Static]  
+
+mkInvocationSimpleName :: String -> [Argument] -> Expression
+mkInvocationSimpleName n = Invocation (mkSimpleName n)
+
+mkThrow :: Expression -> Statement
+mkThrow = Throw . Just
+
+mkNewArgumentNullException :: String -> String -> Expression
+mkNewArgumentNullException n t = mkNew "System.ArgumentNullException" [mkLiteralStringArgument n, mkLiteralStringArgument $ "Field "++ n ++" with type " ++ t ++ " can not be null"]
+
+mkThrowArgumentNullException :: String -> String -> Statement
+mkThrowArgumentNullException n t = mkThrow $ mkNewArgumentNullException n t
+
+ifNullThen :: String -> Statement -> Statement
+ifNullThen n = ifThenBinaryOp BinaryEquals (mkSimpleName n) (Literal NullLit)
+
+mkChoiceT :: String -> String -> String
+mkChoiceT c1T c2T = "Choice<" ++ c1T ++ ", " ++ c2T ++ ">"
+
+mkChoice2Of2 :: String -> [Argument] -> Expression
+mkChoice2Of2 choiceT = mkInvocationSimpleName $ choiceT ++ ".Choice2Of2"
+
+mkChoice2Of2Return :: String -> [Argument] -> Statement
+mkChoice2Of2Return choiceT args = mkReturn $ mkChoice2Of2 choiceT args
+
+mkChoice1Of2 :: String -> [Argument] -> Expression
+mkChoice1Of2 choiceT = mkInvocationSimpleName $ choiceT ++ ".Choice1Of2"
+
+mkChoice1Of2Return :: String -> [Argument] -> Statement
+mkChoice1Of2Return choiceT args = mkReturn $ mkChoice1Of2 choiceT args
