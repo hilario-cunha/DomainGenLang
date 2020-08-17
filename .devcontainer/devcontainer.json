@@ -8,7 +8,7 @@
 	"appPort": ["9000"],
 
 	"extensions": [
-		"alanz.vscode-hie-server"
+		"haskell.haskell"
 	]
 
 }
