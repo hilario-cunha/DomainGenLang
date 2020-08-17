@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6c0b94a4fb41f2f7b98f02559d58bafc0767b15d1ae5d9522db7e2292db3e961
+-- hash: 2836a812b17ae1e0c76407f810ff66b53b8bee5b438a4b68cfaecec87ac557dc
 
 name:           DomainGenLang
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       CSharpGen
       DomainClassesCSharpGen
       Parsing
+      ParsingUtils
   other-modules:
       Paths_DomainGenLang
   hs-source-dirs:

@@ -29,8 +29,8 @@ p Begin int
 p End int
 
 c AlertColor
-p Range Range NotNull
-p Color Color NotNull
+p Range Range [NotNull]
+p Color Color [NotNull]
 
 c DestinationSearchInput
 p Code string
@@ -47,7 +47,7 @@ p ReasonCode string
 p Value string
 
 c CreateTaskOptions
-p Options CreateTaskOption[] NotNull
+p Options CreateTaskOption[] [NotNull]
 
 c CreateTaskAllOptions
 p CreateTaskOption CreateTaskOption
@@ -58,7 +58,7 @@ p DestinationValue string
 c AdhocTasks
 p AdHocTasksDefaultNameV2 AdHocTasksDefaultNameV2
 p AdhocTasksLevel AdhocTasksLevel 
-p AdhocTasksTypes CreateTaskOptions NotNull
+p AdhocTasksTypes CreateTaskOptions [NotNull]
 
 c SortResources
 p Active bool
@@ -100,7 +100,7 @@ p Code string
 p Value string
 
 c TaskTypeDefinitions
-p AdhocTasks AdhocTasks NotNull
+p AdhocTasks AdhocTasks [NotNull]
 p AlertColors Maybe<AlertColor[]>
 p AllowContainers AllowContainers
 p AllowOverQuantity bool
@@ -113,7 +113,7 @@ p GetItemAdhocInfo GetItemAdhocInfo
 p HandleQuantities bool
 p ManageContainers bool
 p MaxEanLength Maybe<IntPositive>
-p NotProcessedResourcesModal NotProcessedResourcesModal NotNull
+p NotProcessedResourcesModal NotProcessedResourcesModal [NotNull]
 p OnAddResourceError bool
 p OnGetItemAdhocInfo bool
 p OnlyChangeQuantityByPicking bool
@@ -143,7 +143,7 @@ p AskSecondEAN bool
 p AllowExpectedQuantityDefault bool
 p HandleMode string
 p ShowFutureDatesOnApproval bool
-p TaskLocation TaskLocation NotNull
+p TaskLocation TaskLocation [NotNull]
 p WithdrawModalControl Maybe<WithdrawModalControl[]>
 p AllowDepreciateOverSoh bool
 p AllowCreateZonesAdhoc bool
@@ -152,7 +152,7 @@ p AllowDateOverLimit bool
 p PreviousApproveAction PreviousApproveAction
 p DestinationSearchInput Maybe<DestinationSearchInput[]>
 p ListMode ListMode
-p SortResources SortResources NotNull
+p SortResources SortResources [NotNull]
 
 c LabelConfig
 p IsLabelChooseByServer bool
@@ -160,6 +160,6 @@ p DefaultLabelCode string
 p CheckSettingOnPrint bool
 
 c ChangePasswordRequest
-p OldPassword StringNotEmpty Required
-p NewPassword StringNotEmpty Required,NotEquals OldPassword
-p NewPasswordConfirmation StringNotEmpty Required,Equals NewPassword
+p OldPassword StringNotEmpty [Required]
+p NewPassword StringNotEmpty [Required,NotEquals OldPassword]
+p NewPasswordConfirmation StringNotEmpty [Required,Equals NewPassword]

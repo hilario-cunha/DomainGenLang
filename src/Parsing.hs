@@ -8,6 +8,8 @@ module Parsing
 
 import Text.ParserCombinators.Parsec
 import Data.Functor (void)
+import Control.Applicative hiding ((<|>), optional, many)
+import ParsingUtils
 
 parseReadOrThrow :: String -> Either String DslVal
 parseReadOrThrow = readOrThrow parseDslVal
@@ -34,147 +36,51 @@ data Class = Class String [Property]
 data DslVal = Namespace [String] String [Class]
             deriving Show
 
-symbol :: Parser Char
-symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
+parseDslVal :: Parser DslVal
+parseDslVal = Namespace <$> parseUsingsP <*> parseNamespaceP <*> parseClassP
 
-parsePropertyName :: Parser String
-parsePropertyName = do
-                    first <- letter
-                    rest <- many (letter <|> digit <|> symbol)
-                    return (first:rest)
-                    
-parsePropertyType :: Parser String
-parsePropertyType = do
-                    first <- letter
-                    rest <- many (letter <|> digit <|> symbol <|> char '[' <|> char ']' <|> char '.')
-                    return (first:rest)
+parseUsingsP :: Parser [String]
+parseUsingsP = option [] (keycharP 'u' *> betweenBracketsSepByComma parseUsing <* spaces)
+    where 
+        parseUsing = (:) <$> letter <*> many (letter <|> digit <|> symbol <|> char '.')
 
-parseInt :: Parser Integer
-parseInt = do 
-            digits <- many1 digit
-            return $ read digits
+parseNamespaceP :: Parser String
+parseNamespaceP = keycharP 'n' *> parseNamespace <* spaces
+    where
+        parseNamespace = (:) <$> letter <*> many (letter <|> digit <|> symbol <|> char '.')
 
-parseValidationName :: Parser String
-parseValidationName = do
-                    first <- letter
-                    rest <- many (letter <|> digit <|> symbol)
-                    return (first:rest)
+classChar :: Char
+classChar = 'c'
 
-parseMaxLength :: Parser PropertyValidation
-parseMaxLength = do 
-                    spaces
-                    i <- parseInt 
-                    return $ MaxLength i
+parseClassP :: Parser [Class]
+parseClassP = keycharP classChar *> manyTill (lexeme parseClass) eof <* spaces
+    
+parseClass :: Parser Class
+parseClass = Class <$> (ws *> parseClassName <* spaces) <*> parseProperties
+    where
+        parseClassName = (:) <$> letter <*> many (letter <|> digit <|> symbol)
 
-parseMinLength :: Parser PropertyValidation
-parseMinLength = do 
-                    spaces
-                    i <- parseInt 
-                    return $ MinLength i
-
-parseEquals :: Parser PropertyValidation
-parseEquals = do 
-                    spaces
-                    n <- parsePropertyName 
-                    return $ Equals n
-
-parseNotEquals :: Parser PropertyValidation
-parseNotEquals = do 
-                    spaces
-                    n <- parsePropertyName 
-                    return $ NotEquals n
-
-parseValidation :: Parser PropertyValidation
-parseValidation = do
-                    validationName <- parseValidationName
-                    spaces
-                    case validationName of
-                        "NotNull" -> return NotNull
-                        "MaxLength" -> parseMaxLength
-                        "MinLength" -> parseMinLength
-                        "Required" -> return Required
-                        "Equals" ->  parseEquals
-                        "NotEquals" -> parseNotEquals
-                        _ -> unexpected ("Unknow validation(" ++ validationName ++ ")")
-
-
-optionalSectionRemovingSpaces :: a -> Parser a -> Parser a
-optionalSectionRemovingSpaces emptyCase parseCases = (char '\n' >> return emptyCase) <|> (space >> optionalSectionRemovingSpaces emptyCase parseCases) <|> parseCases
-
-parseValidations :: Parser [PropertyValidation]
-parseValidations = optionalSectionRemovingSpaces [] (sepBy1 parseValidation (char ','))
-
+parseProperties :: Parser [Property]
+parseProperties = manyTill parseProperty (void (char classChar) <|> eof)
 
 parseProperty :: Parser Property
-parseProperty = do
-                    spaces
-                    char 'p'
-                    atLeastOneSpace
-                    n <- parsePropertyName
-                    atLeastOneSpace
-                    t <- parsePropertyType
-                    vs <- parseValidations
-                    spaces
-                    return $ Property n t vs
-
-
-parseClassName :: Parser String
-parseClassName = do
-                    first <- letter
-                    rest <- many (letter <|> digit <|> symbol)
-                    return (first:rest)
-
-atLeastOneSpace :: Parser ()
-atLeastOneSpace = skipMany1 space
-
-parseBeginClass :: Parser ()
-parseBeginClass = do
-                    many space
-                    char 'c'
-                    atLeastOneSpace
-
-parseClass :: Parser Class
-parseClass = do
-                n <- parseClassName
-                atLeastOneSpace
-                ps <- manyTill parseProperty (void (char 'c') <|> eof)
-                spaces
-                return $ Class n ps
-
-parseBeginNamespace :: Parser ()
-parseBeginNamespace = do
-                    many space
-                    char 'n'
-                    atLeastOneSpace
-
-parseNamespace :: Parser String
-parseNamespace = do
-                    first <- letter
-                    rest <- many (letter <|> digit <|> symbol <|> char '.')
-                    return (first:rest)
-
-parseBeginUsings :: Parser ()
-parseBeginUsings = do
-                    many space
-                    char 'u'
-                    atLeastOneSpace
-
-parseUsing :: Parser String
-parseUsing = do
-                spaces
-                first <- letter
-                rest <- many (letter <|> digit <|> symbol <|> char '.')
-                spaces
-                return (first:rest)
-
-parseDslVal :: Parser DslVal
-parseDslVal = do
-                usings <- (parseBeginUsings >> between (char '[') (char ']') (sepBy1 parseUsing (char ','))) <|> return []
-                parseBeginNamespace
-                namespace <- parseNamespace
-                spaces
-                parseBeginClass
-                cs <- manyTill parseClass eof
-                spaces
-                return $ Namespace usings namespace cs
-
+parseProperty = keycharP 'p' *> (Property <$> keywordP parsePropertyName <*> lexeme parsePropertyType <*> parseValidations) <* spaces
+    where
+        parsePropertyName = (:) <$> letter <*> many (letter <|> digit <|> symbol)
+        parsePropertyType = (:) <$> letter <*> many (letter <|> digit <|> symbol <|> char '[' <|> char ']' <|> char '.')
+        parseValidations = option [] $ betweenBracketsSepByComma parseValidation 
+        parseValidation = lexeme parseValidationName >>= stringToPropertyValidation
+        stringToPropertyValidation validationName = 
+            case validationName of
+                "NotNull" -> return NotNull
+                "MaxLength" -> parseMaxLength
+                "MinLength" -> parseMinLength
+                "Required" -> return Required
+                "Equals" ->  parseEquals
+                "NotEquals" -> parseNotEquals
+                _ -> unexpected ("Unknow validation(" ++ validationName ++ ")")
+        parseValidationName = (:) <$> letter <*> many (letter <|> digit <|> symbol)
+        parseMaxLength = MaxLength <$> lexeme parseInt
+        parseMinLength = MinLength <$> lexeme parseInt
+        parseEquals = Equals <$> lexeme parsePropertyName
+        parseNotEquals = NotEquals <$> lexeme parsePropertyName
