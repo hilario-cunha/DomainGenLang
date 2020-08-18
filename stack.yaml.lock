@@ -7,13 +7,13 @@ packages:
 - completed:
     name: language-csharp
     version: 0.0.1
-    git: https://github.com/zelixir/language-csharp.git
+    git: https://github.com/hilario-cunha/language-csharp.git
     pantry-tree:
       size: 1106
       sha256: 99e7680eba2f32276c77b33f6e464af24a4094b24df952d452590fd0e8c37118
     commit: c86778fe116c4f7e7c9d6c1f7932e727a17ef5e2
   original:
-    git: https://github.com/zelixir/language-csharp.git
+    git: https://github.com/hilario-cunha/language-csharp.git
     commit: c86778fe116c4f7e7c9d6c1f7932e727a17ef5e2
 snapshots:
 - completed:

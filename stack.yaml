@@ -41,7 +41,7 @@ packages:
 #
 # extra-deps: []
 extra-deps:
-    - git: https://github.com/zelixir/language-csharp.git
+    - git: https://github.com/hilario-cunha/language-csharp.git
       commit: c86778fe116c4f7e7c9d6c1f7932e727a17ef5e2
     
 # Override default flag values for local packages and extra-deps
