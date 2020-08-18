@@ -30,7 +30,10 @@ mkSimpleNameArgument :: String -> Argument
 mkSimpleNameArgument n = mkArgument (mkSimpleName n)
 
 mkLiteralStringArgument :: String -> Argument
-mkLiteralStringArgument s = mkArgument (Literal (StringLit s))
+mkLiteralStringArgument s = mkArgument (mkLiteralString s)
+
+mkLiteralString :: String -> Expression
+mkLiteralString s = Literal (StringLit s)
 
 mkFormalParam :: String -> String -> FormalParam
 mkFormalParam t n = FormalParam (Nothing) (mkTypeNamed t) (Identifier n) (Nothing)
@@ -39,18 +42,28 @@ mkPublicClass :: String -> [MemberDeclaration] -> Declaration
 mkPublicClass className cb = TypeDeclaration $ ClassTypeDeclaration [] [Public, Partial] (Identifier className) [] [] [] (ClassBody cb)
 
 mkTypeNamed :: String -> Type
-mkTypeNamed t = (TypeNamed (TypeName (mkName t) []))
+mkTypeNamed t = mkTypeNamedWithTypeArguments t []
+
+mkTypeNamedWithTypeArguments :: String -> [TypeArgument] -> Type
+mkTypeNamedWithTypeArguments t args = (TypeNamed (TypeName (mkName t) args))
 
 mkName :: String -> Name
 mkName n = (Name [Identifier n])
 
 mkPrimaryMemberAccess :: Expression -> String -> MemberAccess
 mkPrimaryMemberAccess obj p = PrimaryMemberAccess obj (Identifier p) []
+
 mkPrimaryMemberAccessThisDot :: String -> MemberAccess
 mkPrimaryMemberAccessThisDot p = PrimaryMemberAccess This (Identifier p) []
 
 mkAssign :: Expression -> Expression -> Expression
 mkAssign l r = Assign l OpAssign r
+
+mkAssignStatement :: String -> String -> Statement
+mkAssignStatement l r = ExpressionStatement $ mkAssign (SimpleName (Identifier l) []) (SimpleName (Identifier r) [])
+
+mkNewArgument :: String -> [Argument] -> Argument
+mkNewArgument cn args = Argument Nothing (mkNew cn args)
 
 mkNew :: String -> [Argument] -> Expression
 mkNew cn args = ObjectCreationExpression (mkTypeNamed cn) args Nothing
@@ -94,8 +107,8 @@ mkFormalParams params = FormalParams params (Nothing)
 mkConstructorMemberDeclaration :: [Modifier] -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
 mkConstructorMemberDeclaration modifiers name formalParams body = ConstructorMemberDeclaration [] modifiers (Identifier name) (mkFormalParams formalParams) Nothing (ConstructorStatementBody body)
 
-mkMethodMemberDeclaration :: [Modifier] -> String -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
-mkMethodMemberDeclaration modifiers _type name formalParams bodyStatements = mkMethodMemberDeclarationWithTypeParameters modifiers (Just $ mkTypeNamed _type) name [] formalParams [] bodyStatements
+mkMethodMemberDeclaration :: [Modifier] -> Type -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
+mkMethodMemberDeclaration modifiers returnType name formalParams bodyStatements = mkMethodMemberDeclarationWithTypeParameters modifiers (Just returnType) name [] formalParams [] bodyStatements
 
 mkMethodMemberDeclarationWithVoidReturn :: [Modifier] -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
 mkMethodMemberDeclarationWithVoidReturn modifiers name formalParams bodyStatements = mkMethodMemberDeclarationWithTypeParameters modifiers Nothing name [] formalParams [] bodyStatements
@@ -103,7 +116,7 @@ mkMethodMemberDeclarationWithVoidReturn modifiers name formalParams bodyStatemen
 mkMethodMemberDeclarationWithTypeParameters :: [Modifier] -> Maybe Type -> String -> [TypeParameter] -> [FormalParam] -> [TypeParameterConstraintClause] -> [Statement] -> MemberDeclaration
 mkMethodMemberDeclarationWithTypeParameters modifiers mType name typeParameters formalParams typeParameterConstraintClauses bodyStatements = MethodMemberDeclaration [] modifiers mType (mkName name) typeParameters (mkFormalParams formalParams) typeParameterConstraintClauses (MethodStatementBody bodyStatements)
 
-mkMethodMemberDeclarationPublicStatic :: String -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
+mkMethodMemberDeclarationPublicStatic :: Type -> String -> [FormalParam] -> [Statement] -> MemberDeclaration
 mkMethodMemberDeclarationPublicStatic = mkMethodMemberDeclaration [Public, Static]  
 
 mkInvocationSimpleName :: String -> [Argument] -> Expression
@@ -135,3 +148,27 @@ mkChoice1Of2 choiceT = mkInvocationSimpleName $ choiceT ++ ".Choice1Of2"
 
 mkChoice1Of2Return :: String -> [Argument] -> Statement
 mkChoice1Of2Return choiceT args = mkReturn $ mkChoice1Of2 choiceT args
+
+mkTypeNamedTypeArgument :: String -> TypeArgument
+mkTypeNamedTypeArgument t = TypeArgument (mkTypeNamed t)
+
+mkTypeArrayTypeArgument :: String -> TypeArgument
+mkTypeArrayTypeArgument t = (TypeArgument (mkTypeArray t))
+
+mkTypeArray :: String -> Type
+mkTypeArray t = TypeArray (ArrayType (mkTypeNamed t) [RankSpecifier 0])
+
+mkField :: String -> String -> MemberDeclaration
+mkField t n = FieldMemberDeclaration [] [] (mkTypeNamed t) [mkVariableDeclarator n]
+
+mkVariableDeclarator :: String -> VariableDeclarator
+mkVariableDeclarator n = VariableDeclarator (Identifier n) (Nothing)
+
+mkVariableDeclaratorWithInitializerExpression :: String -> Expression -> VariableDeclarator
+mkVariableDeclaratorWithInitializerExpression n exp = VariableDeclarator (Identifier n) (Just (VariableInitializerExpression exp))
+
+mkLocalVarDeclarationVar :: [VariableDeclarator] -> LocalVarDeclaration
+mkLocalVarDeclarationVar = LocalVarDeclaration Var 
+        
+mkAndInitLocalVar :: String -> Expression -> Statement
+mkAndInitLocalVar varName exp = Declaration (mkLocalVarDeclarationVar [mkVariableDeclaratorWithInitializerExpression varName exp])

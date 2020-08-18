@@ -75,7 +75,7 @@ mkNewPs c ps = mkNew c (mkSimpleNameArgumentPs ps)
 mkPublicStaticCreateMethod :: String -> [Property] -> MemberDeclaration
 mkPublicStaticCreateMethod c ps = 
     mkMethodMemberDeclarationPublicStatic
-        choiceT
+        (mkTypeNamed choiceT)
         "Create"
         (mkFormalParamPs ps) 
         (mkAllValidations ++  [mkReturnCtorOk])
