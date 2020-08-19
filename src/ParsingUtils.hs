@@ -13,7 +13,7 @@ lexeme :: Parser a -> Parser a
 lexeme p = ws *> p <* ws
 
 sepByComma :: Parser a -> Parser [a]
-sepByComma p = (sepBy1 (lexeme p) (char ','))
+sepByComma p = (sepBy (lexeme p) (char ','))
 
 betweenBrackets :: Parser a -> Parser a
 betweenBrackets = between (char '[') (char ']') 
